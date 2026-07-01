@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProFacture - Factures</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .empty-state { text-align:center; padding:60px 20px; color:#bbb; }
+        .empty-state i { font-size:56px; display:block; margin-bottom:16px; opacity:0.35; }
+        .items-table th { background:#f0f2ff; font-size:13px; font-weight:700; }
+        .items-table td { vertical-align:middle; }
+        .btn-add-line { border:2px dashed #667eea; color:#667eea; background:transparent; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; width:100%; transition:all 0.2s; }
+        .btn-add-line:hover { background:#f0f2ff; }
+        .total-box { background:linear-gradient(135deg,#667eea,#764ba2); border-radius:12px; padding:14px 20px; color:white; }
+        .total-box .label { font-size:13px; opacity:0.85; }
+        .total-box .amount { font-size:22px; font-weight:800; }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="dashboard.html"><i class="bi bi-file-earmark-text"></i> ProFacture</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Tableau de bord</a></li>
+                <li class="nav-item"><a class="nav-link" href="clients.html"><i class="bi bi-people me-1"></i>Clients</a></li>
+                <li class="nav-item"><a class="nav-link active" href="factures.html"><i class="bi bi-file-earmark-text me-1"></i>Factures</a></li>
+                <li class="nav-item"><a class="nav-link" href="devis.html"><i class="bi bi-file-earmark-check me-1"></i>Devis</a></li>
+                <li class="nav-item ms-lg-1"><a class="nav-link d-flex align-items-center gap-1 px-3 py-1 rounded-pill" href="qr-recovery.html" style="background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);font-weight:700;"><i class="bi bi-qr-code-scan"></i><span>QR Code</span></a></li>
+                <li class="nav-item dropdown ms-lg-2">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i> <span id="navUserName">Profil</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item btn-logout" href="#"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 col-md-6">
+            <h1 class="h3 fw-bold mb-1">Gestion des Factures</h1>
+            <p class="text-muted">Créez et gérez vos factures</p>
+        </div>
+        <div class="col-12 col-md-6 text-md-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
+                <i class="bi bi-plus-circle me-1"></i>Nouvelle Facture
+            </button>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Rechercher une facture...">
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <select class="form-select" id="filterStatut">
+                <option value="">Tous les statuts</option>
+                <option>Payée</option><option>En attente</option><option>Impayée</option>
+            </select>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div id="facturesTable"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Modal Créer Facture ===== -->
+<div class="modal fade" id="createInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                <h5 class="modal-title fw-bold text-white"><i class="bi bi-file-earmark-text me-2"></i>Créer une Nouvelle Facture</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-semibold">N° Facture</label>
+                        <input type="text" class="form-control" id="invoiceNumber" readonly style="background:#f8f9fa;">
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-semibold">Date *</label>
+                        <input type="date" class="form-control" id="invoiceDate" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Statut</label>
+                        <select class="form-select" id="invoiceStatus">
+                            <option>En attente</option><option>Payée</option><option>Impayée</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label class="form-label fw-semibold">Client (liste)</label>
+                        <select class="form-select" id="invoiceClient">
+                            <option value="">— Sélectionner un client —</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Ou saisir un nom libre</label>
+                        <input type="text" class="form-control" id="invoiceClientFree" placeholder="Nom du client si non dans la liste">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Notes / Objet</label>
+                    <textarea class="form-control" id="invoiceDescription" rows="2" placeholder="Objet de la facture, conditions..."></textarea>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-list-ul me-1 text-primary"></i>Lignes de la facture</h6>
+                </div>
+                <div class="table-responsive mb-2">
+                    <table class="table items-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:45%">Description</th>
+                                <th style="width:15%">Qté</th>
+                                <th style="width:20%">Prix unitaire (FCFA)</th>
+                                <th style="width:15%">Total</th>
+                                <th style="width:5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceItemsBody"></tbody>
+                    </table>
+                </div>
+                <button class="btn-add-line mb-3" onclick="addInvoiceLine()">
+                    <i class="bi bi-plus-circle me-1"></i>Ajouter une ligne
+                </button>
+                <div class="row justify-content-end">
+                    <div class="col-md-4">
+                        <div class="total-box text-end">
+                            <div class="label">Total Facture</div>
+                            <div class="amount" id="invoiceTotalDisplay">0 FCFA</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="createInvoiceError" class="alert alert-danger d-none mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="createInvoiceBtn"><i class="bi bi-check-circle me-1"></i>Enregistrer la Facture</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Modal Modifier Facture ===== -->
+<div class="modal fade" id="editInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                <h5 class="modal-title fw-bold text-white"><i class="bi bi-pencil me-2"></i>Modifier la Facture</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editInvoiceId">
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-semibold">N° Facture</label>
+                        <input type="text" class="form-control" id="editInvoiceNumber" readonly style="background:#f8f9fa;">
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input type="date" class="form-control" id="editInvoiceDate">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Statut</label>
+                        <select class="form-select" id="editInvoiceStatus">
+                            <option>En attente</option><option>Payée</option><option>Impayée</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Client</label>
+                    <input type="text" class="form-control" id="editInvoiceClient">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Notes</label>
+                    <textarea class="form-control" id="editInvoiceDescription" rows="2"></textarea>
+                </div>
+                <hr>
+                <h6 class="fw-bold mb-2"><i class="bi bi-list-ul me-1 text-primary"></i>Lignes de la facture</h6>
+                <div class="table-responsive mb-2">
+                    <table class="table items-table mb-0">
+                        <thead><tr>
+                            <th style="width:45%">Description</th>
+                            <th style="width:15%">Qté</th>
+                            <th style="width:20%">Prix unitaire (FCFA)</th>
+                            <th style="width:15%">Total</th>
+                            <th style="width:5%"></th>
+                        </tr></thead>
+                        <tbody id="editInvoiceItemsBody"></tbody>
+                    </table>
+                </div>
+                <button class="btn-add-line mb-3" onclick="addEditInvoiceLine()"><i class="bi bi-plus-circle me-1"></i>Ajouter une ligne</button>
+                <div class="row justify-content-end">
+                    <div class="col-md-4">
+                        <div class="total-box text-end">
+                            <div class="label">Total Facture</div>
+                            <div class="amount" id="editInvoiceTotalDisplay">0 FCFA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="editInvoiceBtn"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Supprimer -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Supprimer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"><p id="deleteMsg" class="mb-0"></p></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn"><i class="bi bi-trash me-1"></i>Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-white border-top py-3 mt-4">
+    <div class="container-fluid text-center text-muted small">© 2026 ProFacture. Tous droits réservés.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/libs/jspdf.umd.min.js"></script>
+<script src="../js/libs/jspdf.plugin.autotable.min.js"></script>
+<script src="../js/main.js"></script>
+<script src="../js/pdf-generator.js"></script>
+<script>
+    let deleteTargetId = null;
+    const statColors = { 'Payée':'success','En attente':'warning','Impayée':'danger' };
+
+    /* ── TABLEAU ── */
+    function renderFactures() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const filtre = document.getElementById('filterStatut').value;
+        let factures = DB.getFactures();
+        if (search) factures = factures.filter(f => f.numero.toLowerCase().includes(search) || f.client.toLowerCase().includes(search));
+        if (filtre) factures = factures.filter(f => f.statut === filtre);
+        factures = factures.slice().reverse();
+
+        const el = document.getElementById('facturesTable');
+        if (factures.length === 0) {
+            el.innerHTML = `<div class="empty-state"><i class="bi bi-file-earmark-text"></i><p class="mb-3">Aucune facture pour l'instant</p><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvoiceModal"><i class="bi bi-plus-circle me-1"></i>Créer une facture</button></div>`;
+            return;
+        }
+        el.innerHTML = `<div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>N° Facture</th><th>Client</th><th>Date</th><th>Montant</th><th>Statut</th><th class="text-center">Actions</th></tr>
+                </thead>
+                <tbody>
+                    ${factures.map(f => `<tr>
+                        <td><strong>${f.numero}</strong></td>
+                        <td>${f.client}</td>
+                        <td>${formatDate(f.date)}</td>
+                        <td class="fw-bold">${formatCurrency(f.montant)}</td>
+                        <td><span class="badge bg-${statColors[f.statut]||'secondary'}">${f.statut}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-success me-1" title="Télécharger PDF" onclick="downloadPDF('${f.id}')"><i class="bi bi-file-earmark-pdf"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEdit('${f.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="openDelete('${f.id}','${f.numero}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    /* ── LIGNES ARTICLES (Création) ── */
+    let invLineCount = 0;
+    function addInvoiceLine(desc='', qty=1, price=0) {
+        const id = 'il_' + (++invLineCount);
+        const row = document.createElement('tr');
+        row.id = id;
+        row.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm" placeholder="Ex: Prestation de service" value="${desc}" oninput="calcInvTotal()"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="${qty}" min="1" oninput="calcInvTotal()"></td>
+            <td><input type="number" class="form-control form-control-sm text-end" value="${price}" min="0" placeholder="0" oninput="calcInvTotal()"></td>
+            <td class="text-end fw-bold inv-lt-${id}">0 FCFA</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="removeInvLine('${id}')"><i class="bi bi-x"></i></button></td>`;
+        document.getElementById('invoiceItemsBody').appendChild(row);
+        calcInvTotal();
+    }
+    function removeInvLine(id) { document.getElementById(id)?.remove(); calcInvTotal(); }
+    function calcInvTotal() {
+        let total = 0;
+        document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
+            const inp = row.querySelectorAll('input');
+            const lt = (parseFloat(inp[1]?.value)||0) * (parseFloat(inp[2]?.value)||0);
+            total += lt;
+            const cell = row.querySelector('.inv-lt-' + row.id);
+            if (cell) cell.textContent = lt.toLocaleString('fr-FR') + ' FCFA';
+        });
+        document.getElementById('invoiceTotalDisplay').textContent = total.toLocaleString('fr-FR') + ' FCFA';
+    }
+    function getInvItems() {
+        return [...document.querySelectorAll('#invoiceItemsBody tr')].map(row => {
+            const inp = row.querySelectorAll('input');
+            return { description: inp[0]?.value?.trim()||'', quantity: parseFloat(inp[1]?.value)||0, unitPrice: parseFloat(inp[2]?.value)||0 };
+        }).filter(i => i.description || i.unitPrice);
+    }
+    function getInvTotal() { return getInvItems().reduce((s,i)=>s+(i.quantity*i.unitPrice),0); }
+
+    /* ── LIGNES ARTICLES (Édition) ── */
+    let editInvLineCount = 0;
+    function addEditInvoiceLine(desc='', qty=1, price=0) {
+        const id = 'eil_' + (++editInvLineCount);
+        const row = document.createElement('tr');
+        row.id = id;
+        row.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm" value="${desc}" placeholder="Description" oninput="calcEditInvTotal()"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="${qty}" min="1" oninput="calcEditInvTotal()"></td>
+            <td><input type="number" class="form-control form-control-sm text-end" value="${price}" min="0" oninput="calcEditInvTotal()"></td>
+            <td class="text-end fw-bold edit-inv-lt-${id}">0 FCFA</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="removeEditInvLine('${id}')"><i class="bi bi-x"></i></button></td>`;
+        document.getElementById('editInvoiceItemsBody').appendChild(row);
+        calcEditInvTotal();
+    }
+    function removeEditInvLine(id) { document.getElementById(id)?.remove(); calcEditInvTotal(); }
+    function calcEditInvTotal() {
+        let total = 0;
+        document.querySelectorAll('#editInvoiceItemsBody tr').forEach(row => {
+            const inp = row.querySelectorAll('input');
+            const lt = (parseFloat(inp[1]?.value)||0) * (parseFloat(inp[2]?.value)||0);
+            total += lt;
+            const cell = row.querySelector('.edit-inv-lt-' + row.id);
+            if (cell) cell.textContent = lt.toLocaleString('fr-FR') + ' FCFA';
+        });
+        document.getElementById('editInvoiceTotalDisplay').textContent = total.toLocaleString('fr-FR') + ' FCFA';
+    }
+    function getEditInvItems() {
+        return [...document.querySelectorAll('#editInvoiceItemsBody tr')].map(row => {
+            const inp = row.querySelectorAll('input');
+            return { description: inp[0]?.value?.trim()||'', quantity: parseFloat(inp[1]?.value)||0, unitPrice: parseFloat(inp[2]?.value)||0 };
+        }).filter(i => i.description || i.unitPrice);
+    }
+    function getEditInvTotal() { return getEditInvItems().reduce((s,i)=>s+(i.quantity*i.unitPrice),0); }
+
+    /* ── Clients ── */
+    function populateClientSelect(id) {
+        document.getElementById(id).innerHTML = '<option value="">— Sélectionner un client —</option>' +
+            DB.getClients().map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
+    }
+
+    /* ── Ouvrir modal création ── */
+    document.getElementById('createInvoiceModal').addEventListener('show.bs.modal', function() {
+        const n = DB.getFactures().length + 1;
+        document.getElementById('invoiceNumber').value = 'FAC-' + String(n).padStart(3,'0');
+        document.getElementById('invoiceDate').valueAsDate = new Date();
+        populateClientSelect('invoiceClient');
+        document.getElementById('invoiceItemsBody').innerHTML = '';
+        invLineCount = 0;
+        addInvoiceLine(); // 1 ligne vide au départ
+        document.getElementById('createInvoiceError').classList.add('d-none');
+        document.getElementById('invoiceDescription').value = '';
+    });
+
+    /* ── Enregistrer facture ── */
+    document.getElementById('createInvoiceBtn').addEventListener('click', function() {
+        const client = document.getElementById('invoiceClient').value || document.getElementById('invoiceClientFree').value.trim();
+        const date = document.getElementById('invoiceDate').value;
+        const description = document.getElementById('invoiceDescription').value.trim();
+        const statut = document.getElementById('invoiceStatus').value;
+        const items = getInvItems();
+        const montant = getInvTotal();
+        const errEl = document.getElementById('createInvoiceError');
+        if (!client) { errEl.textContent = 'Veuillez sélectionner ou saisir un client.'; errEl.classList.remove('d-none'); return; }
+        if (!date)   { errEl.textContent = 'La date est obligatoire.'; errEl.classList.remove('d-none'); return; }
+        if (items.length === 0 || montant === 0) { errEl.textContent = 'Ajoutez au moins une ligne avec un montant.'; errEl.classList.remove('d-none'); return; }
+        errEl.classList.add('d-none');
+        DB.addFacture({ client, date, description, montant, statut, items });
+        bootstrap.Modal.getInstance(document.getElementById('createInvoiceModal')).hide();
+        renderFactures();
+    });
+
+    /* ── Ouvrir modal édition ── */
+    function openEdit(id) {
+        const f = DB.getFactures().find(f => f.id === id);
+        if (!f) return;
+        document.getElementById('editInvoiceId').value = f.id;
+        document.getElementById('editInvoiceNumber').value = f.numero;
+        document.getElementById('editInvoiceClient').value = f.client;
+        document.getElementById('editInvoiceDescription').value = f.description || '';
+        document.getElementById('editInvoiceStatus').value = f.statut;
+        document.getElementById('editInvoiceDate').value = f.date || '';
+        document.getElementById('editInvoiceItemsBody').innerHTML = '';
+        editInvLineCount = 0;
+        const items = f.items && f.items.length > 0 ? f.items : [{ description: f.description||'Prestation', quantity:1, unitPrice: f.montant }];
+        items.forEach(i => addEditInvoiceLine(i.description, i.quantity, i.unitPrice));
+        new bootstrap.Modal(document.getElementById('editInvoiceModal')).show();
+    }
+
+    document.getElementById('editInvoiceBtn').addEventListener('click', function() {
+        const id = document.getElementById('editInvoiceId').value;
+        const items = getEditInvItems();
+        const montant = getEditInvTotal();
+        DB.updateFacture(id, {
+            client: document.getElementById('editInvoiceClient').value,
+            description: document.getElementById('editInvoiceDescription').value,
+            date: document.getElementById('editInvoiceDate').value,
+            statut: document.getElementById('editInvoiceStatus').value,
+            montant, items
+        });
+        bootstrap.Modal.getInstance(document.getElementById('editInvoiceModal')).hide();
+        renderFactures();
+    });
+
+    /* ── Supprimer ── */
+    function openDelete(id, numero) {
+        deleteTargetId = id;
+        document.getElementById('deleteMsg').textContent = `Supprimer la facture "${numero}" ?`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (!deleteTargetId) return;
+        DB.deleteFacture(deleteTargetId);
+        deleteTargetId = null;
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        renderFactures();
+    });
+
+    /* ── Télécharger PDF ── */
+    function downloadPDF(id) {
+        const f = DB.getFactures().find(x => x.id === id);
+        if (!f) return alert('Facture introuvable');
+        generateFacturePDF({
+            id: f.id, numero: f.numero, date: f.date, statut: f.statut,
+            client: f.client, clientName: f.client,
+            clientEmail: f.clientEmail||'', clientPhone: f.clientPhone||'', clientAddress: f.clientAddress||'',
+            description: f.description||'', montant: f.montant, amount: f.montant,
+            items: f.items||[]
+        });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderFactures);
+    document.getElementById('filterStatut').addEventListener('change', renderFactures);
+    document.addEventListener('DOMContentLoaded', renderFactures);
+</script>
+<script src="../js/ai-assistant.js"></script>
+</body>
+</html>

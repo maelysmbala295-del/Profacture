@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProFacture - Document</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #f0f4ff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh; padding: 16px;
+        }
+        .card {
+            max-width: 500px; margin: 0 auto;
+            background: white; border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+        .card-head {
+            padding: 24px 24px 20px;
+            color: white; position: relative;
+        }
+        .card-head.facture { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .card-head.devis   { background: linear-gradient(135deg,#11998e,#38ef7d); }
+        .verified {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            opacity: 0.85; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .card-head h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+        .card-head .num { font-size: 14px; opacity: 0.85; }
+        .card-body { padding: 20px 24px 28px; }
+        .info-block {
+            background: #f8f9ff; border-radius: 12px;
+            padding: 16px 18px; margin-bottom: 16px;
+        }
+        .info-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 8px 0; border-bottom: 1px solid #eee;
+        }
+        .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .info-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #999; }
+        .info-value { font-size: 15px; font-weight: 600; color: #1a1a2e; text-align: right; max-width: 55%; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 700; color: white;
+        }
+        .bg-success { background: #28a745; }
+        .bg-warning { background: #ffc107; color: #333 !important; }
+        .bg-danger  { background: #dc3545; }
+        .bg-info    { background: #17a2b8; }
+        .bg-secondary { background: #6c757d; }
+
+        .items-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #666; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .item-row {
+            background: #f8f9ff; border-radius: 10px;
+            padding: 10px 14px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-left { flex: 1; }
+        .item-desc { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+        .item-sub  { font-size: 12px; color: #888; margin-top: 2px; }
+        .item-total { font-size: 15px; font-weight: 800; color: #667eea; white-space: nowrap; }
+        .item-total.devis { color: #11998e; }
+
+        .total-bar {
+            border-radius: 14px; padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 16px;
+        }
+        .total-bar.facture { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .total-bar.devis   { background: linear-gradient(135deg,#11998e,#38ef7d); }
+        .total-bar .tl { font-size: 13px; color: rgba(255,255,255,0.85); }
+        .total-bar .ta { font-size: 22px; font-weight: 800; color: white; }
+
+        .footer-note {
+            margin-top: 20px; padding: 14px 16px;
+            background: #fffbf0; border: 1.5px solid #ffe082;
+            border-radius: 12px; font-size: 13px; color: #795548;
+            line-height: 1.5;
+        }
+        .footer-note strong { color: #5d4037; }
+
+        .err-box { text-align: center; padding: 48px 20px; }
+        .err-icon { font-size: 60px; margin-bottom: 16px; }
+        .err-box h3 { color: #c62828; font-size: 20px; margin-bottom: 8px; }
+        .err-box p { color: #888; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="card" id="root">
+    <div class="card-body">
+        <div style="text-align:center;padding:40px 0;color:#aaa;">
+            <div style="font-size:32px;margin-bottom:10px;">⏳</div>
+            Chargement...
+        </div>
+    </div>
+</div>
+
+<script>
+function fmt(n) {
+    const num = Math.round(Number(n) || 0);
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+}
+function fmtDate(d) {
+    if (!d) return '-';
+    try {
+        const dt = new Date(d);
+        return String(dt.getDate()).padStart(2,'0') + '/' +
+               String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+    } catch(e) { return d; }
+}
+function statutClass(s) {
+    return {'Payée':'success','En attente':'warning','Impayée':'danger',
+            'Envoyé':'info','Accepté':'success','En révision':'warning','Rejeté':'danger'}[s] || 'secondary';
+}
+function err(msg) {
+    document.getElementById('root').innerHTML = `
+        <div class="card-body">
+            <div class="err-box">
+                <div class="err-icon">❌</div>
+                <h3>Document introuvable</h3>
+                <p>${msg}</p>
+            </div>
+        </div>`;
+}
+
+const params = new URLSearchParams(window.location.search);
+const type = params.get('type') || '';
+const b64  = params.get('d');
+
+if (!b64) {
+    err('Lien invalide ou incomplet. Scannez à nouveau le QR code.');
+} else {
+    try {
+        const json = decodeURIComponent(atob(b64));
+        const doc  = JSON.parse(json);
+        const isDevis = type === 'devis';
+        const cls = isDevis ? 'devis' : 'facture';
+        const label = isDevis ? 'DEVIS' : 'FACTURE';
+
+        const items = doc.items && doc.items.length > 0 ? doc.items : [];
+        const itemsHTML = items.length > 0 ? `
+            <div style="margin-bottom:16px;">
+                <div class="items-title">📋 Détail des prestations</div>
+                ${items.map(i => {
+                    const qty = Number(i.quantity||1);
+                    const pu  = Number(i.unitPrice||0);
+                    return `<div class="item-row">
+                        <div class="item-left">
+                            <div class="item-desc">${i.description||'-'}</div>
+                            <div class="item-sub">${qty} × ${fmt(pu)}</div>
+                        </div>
+                        <div class="item-total ${cls}">${fmt(qty*pu)}</div>
+                    </div>`;
+                }).join('')}
+            </div>` : (doc.description ? `
+            <div style="margin-bottom:16px;">
+                <div class="items-title">📋 Description</div>
+                <div class="item-row"><div class="item-desc">${doc.description}</div></div>
+            </div>` : '');
+
+        const emailRow = doc.clientEmail ? `
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">${doc.clientEmail}</span>
+            </div>` : '';
+        const phoneRow = doc.clientPhone ? `
+            <div class="info-row">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value">${doc.clientPhone}</span>
+            </div>` : '';
+
+        const noteLabel = isDevis
+            ? 'Ce devis est valable 30 jours. Pour l\'accepter, retournez-le signé.'
+            : 'Merci pour votre confiance. Paiement à réception de la facture.';
+
+        document.getElementById('root').innerHTML = `
+            <div class="card-head ${cls}">
+                <div class="verified">✅ DOCUMENT VÉRIFIÉ — PROFACTURE</div>
+                <h1>${label}</h1>
+                <div class="num">N° ${doc.numero || '-'}</div>
+            </div>
+            <div class="card-body">
+                <div class="info-block">
+                    <div class="info-row">
+                        <span class="info-label">Client</span>
+                        <span class="info-value">${doc.client || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date</span>
+                        <span class="info-value">${fmtDate(doc.date)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Statut</span>
+                        <span class="info-value">
+                            <span class="badge bg-${statutClass(doc.statut)}">${doc.statut || '-'}</span>
+                        </span>
+                    </div>
+                    ${emailRow}${phoneRow}
+                </div>
+
+                ${itemsHTML}
+
+                <div class="total-bar ${cls}">
+                    <span class="tl">${isDevis ? 'Total estimé' : 'Montant total'}</span>
+                    <span class="ta">${fmt(doc.montant)}</span>
+                </div>
+
+                <div class="footer-note">
+                    <strong>📌 Note :</strong> ${noteLabel}
+                </div>
+            </div>`;
+    } catch(e) {
+        err('Impossible de lire les données. Le QR code est peut-être endommagé.<br><small>' + e.message + '</small>');
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProFacture - Connexion</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .particles {
+            position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+        }
+        .particle {
+            position: absolute; width: 4px; height: 4px; background: rgba(102,126,234,0.4);
+            border-radius: 50%; animation: float linear infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10px) scale(1); opacity: 0; }
+        }
+        .wrapper { position: relative; z-index: 1; width: 100%; max-width: 500px; }
+        .login-card {
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+            overflow: hidden;
+            animation: slideUp 0.5s cubic-bezier(.22,.68,0,1.2);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-header-grad {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 36px 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-header-grad::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translate(-20%,-20%) rotate(0deg); }
+            50% { transform: translate(20%,20%) rotate(180deg); }
+        }
+        .logo-wrap {
+            width: 72px; height: 72px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            position: relative; z-index: 1;
+        }
+        .logo-wrap i { font-size: 34px; color: white; }
+        .card-header-grad h1 { font-size: 28px; font-weight: 800; color: white; margin-bottom: 6px; position: relative; z-index: 1; }
+        .card-header-grad p { color: rgba(255,255,255,0.8); font-size: 14px; position: relative; z-index: 1; }
+        .card-body-pad { padding: 36px 40px 32px; }
+
+        .form-group { margin-bottom: 22px; }
+        .form-label-custom {
+            display: flex; align-items: center; gap: 7px;
+            font-weight: 700; font-size: 12px; color: #555;
+            text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+        }
+        .form-label-custom i { font-size: 15px; color: #667eea; }
+        .input-wrap { position: relative; }
+        .input-custom {
+            width: 100%;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 14px 46px 14px 16px;
+            font-size: 15px;
+            color: #1a1a2e;
+            background: #fafaff;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .input-custom:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.12);
+        }
+        .input-custom.error { border-color: #e53935; box-shadow: 0 0 0 4px rgba(229,57,53,0.1); }
+        .input-custom.success { border-color: #43a047; box-shadow: 0 0 0 4px rgba(67,160,71,0.1); }
+        .input-action {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #aaa; cursor: pointer; padding: 4px;
+            font-size: 18px; transition: color 0.2s;
+        }
+        .input-action:hover { color: #667eea; }
+
+        .error-alert {
+            display: none; background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+            border: 1.5px solid #ffcdd2; border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 20px;
+            color: #c62828; font-size: 14px;
+            flex-direction: row; align-items: flex-start; gap: 10px;
+        }
+        .error-alert.show { display: flex; animation: shake 0.3s ease; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .error-alert i { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none; border-radius: 12px;
+            padding: 15px; font-weight: 800; font-size: 16px;
+            color: white; cursor: pointer;
+            transition: all 0.3s; margin-top: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.4);
+        }
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+        }
+        .btn-login:active:not(:disabled) { transform: translateY(0); }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .divider { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: #ccc; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #ebebf0; }
+
+        .btn-secondary-action {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            border: 2px solid #667eea; color: #667eea; border-radius: 12px;
+            padding: 13px; font-weight: 700; font-size: 15px; text-decoration: none;
+            transition: all 0.25s; margin-bottom: 12px;
+        }
+        .btn-secondary-action:hover { background: #667eea; color: white; transform: translateY(-1px); }
+        .btn-secondary-action i { font-size: 18px; }
+
+        .btn-qr-recover {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            border: 2px solid #28a745; color: #28a745; border-radius: 12px;
+            padding: 13px; font-weight: 700; font-size: 15px; text-decoration: none;
+            transition: all 0.25s;
+        }
+        .btn-qr-recover:hover { background: #28a745; color: white; transform: translateY(-1px); }
+
+        .back-link { display: block; text-align: center; margin-top: 20px; color: rgba(255,255,255,0.6); font-size: 12px; text-decoration: none; transition: color 0.2s; }
+        .back-link:hover { color: rgba(255,255,255,0.9); }
+        .footer-text { text-align: center; color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 16px; }
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="wrapper">
+        <div class="login-card">
+            <div class="card-header-grad">
+                <div class="logo-wrap"><i class="bi bi-file-earmark-text"></i></div>
+                <h1>ProFacture</h1>
+                <p>Connectez-vous à votre espace de gestion</p>
+            </div>
+            <div class="card-body-pad">
+                <div class="error-alert" id="loginError">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <div id="loginErrorText"></div>
+                </div>
+
+                <form id="loginForm" novalidate>
+                    <div class="form-group">
+                        <label class="form-label-custom"><i class="bi bi-envelope"></i>Adresse e-mail</label>
+                        <div class="input-wrap">
+                            <input type="email" class="input-custom" id="email" placeholder="votre@email.com" autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:28px;">
+                        <label class="form-label-custom"><i class="bi bi-shield-lock"></i>Mot de passe</label>
+                        <div class="input-wrap">
+                            <input type="password" class="input-custom" id="password" placeholder="Votre mot de passe" autocomplete="current-password">
+                            <button type="button" class="input-action" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-login" id="loginBtn">
+                        <div class="spinner" id="loginSpinner"></div>
+                        <i class="bi bi-box-arrow-in-right" id="loginIcon"></i>
+                        <span id="loginText">Se connecter</span>
+                    </button>
+                </form>
+
+                <div class="divider">ou</div>
+
+                <a href="signup.html" class="btn-secondary-action">
+                    <i class="bi bi-person-plus"></i>Créer un compte
+                </a>
+            
+            </div>
+        </div>
+        <a href="../index.html" class="back-link"><i class="bi bi-arrow-left me-1"></i>Retour à l'accueil</a>
+        <p class="footer-text">© 2026 ProFacture. Tous droits réservés.</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Particules de fond
+        const particlesEl = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (8 + Math.random() * 12) + 's';
+            p.style.animationDelay = (Math.random() * 8) + 's';
+            p.style.width = p.style.height = (3 + Math.random() * 4) + 'px';
+            particlesEl.appendChild(p);
+        }
+
+        function getAccounts() { return JSON.parse(localStorage.getItem('pf_accounts') || '[]'); }
+
+        function showError(msg) {
+            document.getElementById('loginErrorText').innerHTML = msg;
+            document.getElementById('loginError').classList.add('show');
+            document.getElementById('email').classList.add('error');
+        }
+        function clearError() {
+            document.getElementById('loginError').classList.remove('show');
+            document.getElementById('email').classList.remove('error', 'success');
+            document.getElementById('password').classList.remove('error');
+        }
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+            icon.className = pwd.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+        }
+
+        // Validation temps réel email
+        document.getElementById('email').addEventListener('blur', function() {
+            const v = this.value.trim();
+            if (v && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+                this.classList.add('success'); this.classList.remove('error');
+            } else if (v) {
+                this.classList.add('error'); this.classList.remove('success');
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearError();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            if (!email || !password) { showError('Veuillez remplir tous les champs.'); return; }
+
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+            const icon = document.getElementById('loginIcon');
+            const text = document.getElementById('loginText');
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            icon.style.display = 'none';
+            text.textContent = 'Connexion...';
+
+            setTimeout(() => {
+                const accounts = getAccounts();
+                const account = accounts.find(a => a.email === email);
+                if (!account) {
+                    showError(`Aucun compte pour <strong>${email}</strong>.<br><a href="signup.html" class="text-danger fw-bold">Créer un compte →</a>`);
+                    btn.disabled = false; spinner.style.display = 'none'; icon.style.display = ''; text.textContent = 'Se connecter';
+                    return;
+                }
+                if (account.password !== password) {
+                    showError('Mot de passe incorrect. Vérifiez et réessayez.');
+                    document.getElementById('password').classList.add('error');
+                    btn.disabled = false; spinner.style.display = 'none'; icon.style.display = ''; text.textContent = 'Se connecter';
+                    return;
+                }
+                localStorage.setItem('pf_session', JSON.stringify({ email: account.email, fullName: account.fullName, companyName: account.companyName, loggedAt: Date.now() }));
+                icon.className = 'bi bi-check-circle';
+                icon.style.display = '';
+                text.textContent = 'Connexion réussie !';
+                setTimeout(() => window.location.href = 'dashboard.html', 700);
+            }, 800);
+        });
+    </script>
+</body>
+</html>

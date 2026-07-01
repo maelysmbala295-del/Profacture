@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProFacture - Tableau de Bord</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .stat-card { border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; opacity: 0.4; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="bi bi-file-earmark-text"></i> ProFacture
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link active" href="dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Tableau de bord</a></li>
+                    <li class="nav-item"><a class="nav-link" href="clients.html"><i class="bi bi-people me-1"></i>Clients</a></li>
+                    <li class="nav-item"><a class="nav-link" href="factures.html"><i class="bi bi-file-earmark-text me-1"></i>Factures</a></li>
+                    <li class="nav-item"><a class="nav-link" href="devis.html"><i class="bi bi-file-earmark-check me-1"></i>Devis</a></li>
+                    <li class="nav-item ms-lg-1"><a class="nav-link d-flex align-items-center gap-1 px-3 py-1 rounded-pill" href="qr-recovery.html" style="background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);font-weight:700;letter-spacing:0.2px;"><i class="bi bi-qr-code-scan"></i><span>QR Code</span></a></li>
+                    <li class="nav-item dropdown ms-lg-2">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="navUserName">Profil</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item btn-logout" href="#"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 fw-bold mb-1">Tableau de Bord</h1>
+                <p class="text-muted" id="welcomeMsg">Bienvenue dans votre espace de gestion</p>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="row mb-4">
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-file-earmark-text"></i></div>
+                        <div>
+                            <div class="text-muted small">Factures</div>
+                            <div class="fs-3 fw-bold text-primary" id="statFactures">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-file-earmark-check"></i></div>
+                        <div>
+                            <div class="text-muted small">Devis</div>
+                            <div class="fs-3 fw-bold text-success" id="statDevis">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-people"></i></div>
+                        <div>
+                            <div class="text-muted small">Clients</div>
+                            <div class="fs-3 fw-bold text-info" id="statClients">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-cash-stack"></i></div>
+                        <div>
+                            <div class="text-muted small">Total encaissé</div>
+                            <div class="fs-5 fw-bold text-warning" id="statCA">0 FCFA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables récentes -->
+        <div class="row">
+            <div class="col-12 col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Dernières Factures</h6>
+                        <a href="factures.html" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="recentFactures"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Derniers Devis</h6>
+                        <a href="devis.html" class="btn btn-sm btn-outline-success">Voir tout</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="recentDevis"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-top py-3 mt-4">
+        <div class="container-fluid text-center text-muted small">© 2026 ProFacture. Tous droits réservés.</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const session = getSession();
+            if (session.fullName) {
+                document.getElementById('welcomeMsg').textContent = 'Bienvenue, ' + session.fullName + ' !';
+            }
+
+            const factures = DB.getFactures();
+            const devis = DB.getDevis();
+            const clients = DB.getClients();
+
+            document.getElementById('statFactures').textContent = factures.length;
+            document.getElementById('statDevis').textContent = devis.length;
+            document.getElementById('statClients').textContent = clients.length;
+
+            const totalCA = factures.filter(f => f.statut === 'Payée').reduce((s, f) => s + Number(f.montant), 0);
+            document.getElementById('statCA').textContent = formatCurrency(totalCA);
+
+            // Dernières factures
+            const rfEl = document.getElementById('recentFactures');
+            const last5F = factures.slice(-5).reverse();
+            if (last5F.length === 0) {
+                rfEl.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark"></i><p>Aucune facture pour l\'instant</p><a href="factures.html" class="btn btn-sm btn-primary">Créer une facture</a></div>';
+            } else {
+                const statColors = { 'Payée': 'success', 'En attente': 'warning', 'Impayée': 'danger' };
+                rfEl.innerHTML = '<table class="table table-hover mb-0"><tbody>' +
+                    last5F.map(f => `<tr>
+                        <td><strong>${f.numero}</strong><br><small class="text-muted">${f.client}</small></td>
+                        <td class="text-end">${formatCurrency(f.montant)}<br><span class="badge bg-${statColors[f.statut]||'secondary'}">${f.statut}</span></td>
+                    </tr>`).join('') + '</tbody></table>';
+            }
+
+            // Derniers devis
+            const rdEl = document.getElementById('recentDevis');
+            const last5D = devis.slice(-5).reverse();
+            if (last5D.length === 0) {
+                rdEl.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark-check"></i><p>Aucun devis pour l\'instant</p><a href="devis.html" class="btn btn-sm btn-success">Créer un devis</a></div>';
+            } else {
+                const statColorsD = { 'Envoyé': 'info', 'Accepté': 'success', 'En révision': 'warning', 'Rejeté': 'danger' };
+                rdEl.innerHTML = '<table class="table table-hover mb-0"><tbody>' +
+                    last5D.map(d => `<tr>
+                        <td><strong>${d.numero}</strong><br><small class="text-muted">${d.client}</small></td>
+                        <td class="text-end">${formatCurrency(d.montant)}<br><span class="badge bg-${statColorsD[d.statut]||'secondary'}">${d.statut}</span></td>
+                    </tr>`).join('') + '</tbody></table>';
+            }
+        });
+    </script>
+    <script src="../js/ai-assistant.js"></script>
+</body>
+</html>
